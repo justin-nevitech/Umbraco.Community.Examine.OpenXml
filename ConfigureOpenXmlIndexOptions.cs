@@ -21,9 +21,9 @@ namespace UmbracoExamine.OpenXml
             _settings = settings;
         }
 
-        public void Configure(string name, LuceneDirectoryIndexOptions options)
+        public void Configure(string? name, LuceneDirectoryIndexOptions options)
         {
-            if (name.Equals(OpenXmlIndexConstants.OpenXmlIndexName))
+            if (name?.Equals(OpenXmlIndexConstants.OpenXmlIndexName) ?? false)
             {
                 options.Analyzer = new StandardAnalyzer(LuceneVersion.LUCENE_48);
                 options.Validator = new OpenXmlValueSetValidator(true, null);
