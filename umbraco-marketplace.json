@@ -1,0 +1,15 @@
+{
+    "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+    "AuthorDetails": {
+      "Name": "Justin Neville",
+      "ImageUrl": "https://github.com/justin-nevitech.png"
+    },
+    "Category": "Search",
+    "Description": "Extracts text content from OpenXml documents (.docx, .pptx, .xlsx) uploaded to the Umbraco media library and indexes it using Examine, making Office document content fully searchable.",
+    "LicenseTypes": [ "Free" ],
+    "IssueTrackerUrl": "https://github.com/justin-nevitech/Umbraco.Community.Examine.OpenXml/issues",
+    "PackageType": "Package",
+    "Tags": [ "Examine", "Search", "OpenXml", "Word", "Excel", "PowerPoint", "Media", "Indexing" ],
+    "Title": "Umbraco.Community.Examine.OpenXml",
+    "IconUrl": "https://raw.githubusercontent.com/justin-nevitech/Umbraco.Community.Examine.OpenXml/main/docs/icon.png"
+  }
