@@ -98,6 +98,6 @@ The `OpenXmlIndexConstants` class provides strongly-typed constants for querying
 
 This package is based on [UmbracoExamine.PDF](https://github.com/umbraco/UmbracoExamine.PDF) by the Umbraco team. Thank you to the Umbraco HQ developers and contributors for providing the foundation and patterns that made this package possible.
 
-<a href="https://www.flaticon.com/free-icons/files-and-folders" title="files and folders icons">Files and folders icons created by kawalanicon - Flaticon</a>
+[Files and folders icons created by kawalanicon - Flaticon](https://www.flaticon.com/free-icons/files-and-folders)
 
 For full documentation and source code, visit the [GitHub repository](https://github.com/justin-nevitech/Umbraco.Community.Examine.OpenXml).
