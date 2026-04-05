@@ -37,18 +37,30 @@ namespace Umbraco.Community.Examine.OpenXml
                 return String.Empty;
             }
 
-            using (var fileStream = _mediaFileSystem.FileSystem.OpenFile(filePath))
+            try
             {
-                if (fileStream != null)
+                using (var fileStream = _mediaFileSystem.FileSystem.OpenFile(filePath))
                 {
+                    if (fileStream == null)
+                    {
+                        _logger.LogError("Unable to open file {FilePath}", filePath);
+                        return String.Empty;
+                    }
+
+                    if (fileStream.Length > OpenXmlIndexConstants.MaxFileSize)
+                    {
+                        _logger.LogWarning("File {FilePath} exceeds maximum size limit of {MaxSize} bytes", filePath, OpenXmlIndexConstants.MaxFileSize);
+                        return String.Empty;
+                    }
+
                     var openXmlTextExtractor = _openXmlTextExtractorFactory.GetOpenXmlTextExtractor(extension);
                     return openXmlTextExtractor.GetText(fileStream);
                 }
-                else
-                {
-                    _logger.LogError("Unable to open file {FilePath}", filePath);
-                    return String.Empty;
-                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error extracting text from file {FilePath}", filePath);
+                return String.Empty;
             }
         }
     }

@@ -69,6 +69,95 @@ public class PresentationDocumentTextExtractorTests
     }
 
     [Fact]
+    public void GetText_WithMultipleSlides_ExtractsFromAll()
+    {
+        using var stream = new MemoryStream();
+        using (var doc = PresentationDocument.Create(stream, PresentationDocumentType.Presentation))
+        {
+            var presentationPart = doc.AddPresentationPart();
+            presentationPart.Presentation = new Presentation(
+                new SlideIdList(
+                    new SlideId { Id = 256, RelationshipId = "rId2" },
+                    new SlideId { Id = 257, RelationshipId = "rId3" }));
+
+            var slidePart1 = presentationPart.AddNewPart<SlidePart>("rId2");
+            slidePart1.Slide = new Slide(new CommonSlideData(new ShapeTree(
+                new NonVisualGroupShapeProperties(
+                    new NonVisualDrawingProperties { Id = 1, Name = "" },
+                    new NonVisualGroupShapeDrawingProperties(),
+                    new ApplicationNonVisualDrawingProperties()),
+                new GroupShapeProperties(),
+                new Shape(
+                    new NonVisualShapeProperties(
+                        new NonVisualDrawingProperties { Id = 2, Name = "Title" },
+                        new NonVisualShapeDrawingProperties(),
+                        new ApplicationNonVisualDrawingProperties()),
+                    new ShapeProperties(),
+                    new TextBody(
+                        new D.BodyProperties(),
+                        new D.Paragraph(new D.Run(new D.Text("SlideOneText"))))))));
+
+            var slidePart2 = presentationPart.AddNewPart<SlidePart>("rId3");
+            slidePart2.Slide = new Slide(new CommonSlideData(new ShapeTree(
+                new NonVisualGroupShapeProperties(
+                    new NonVisualDrawingProperties { Id = 1, Name = "" },
+                    new NonVisualGroupShapeDrawingProperties(),
+                    new ApplicationNonVisualDrawingProperties()),
+                new GroupShapeProperties(),
+                new Shape(
+                    new NonVisualShapeProperties(
+                        new NonVisualDrawingProperties { Id = 2, Name = "Title" },
+                        new NonVisualShapeDrawingProperties(),
+                        new ApplicationNonVisualDrawingProperties()),
+                    new ShapeProperties(),
+                    new TextBody(
+                        new D.BodyProperties(),
+                        new D.Paragraph(new D.Run(new D.Text("SlideTwoText"))))))));
+        }
+        stream.Position = 0;
+
+        var result = _extractor.GetText(stream);
+
+        Assert.Contains("SlideOneText", result);
+        Assert.Contains("SlideTwoText", result);
+    }
+
+    [Fact]
+    public void GetText_WithSlideWithoutNotes_ExtractsSlideContent()
+    {
+        using var stream = new MemoryStream();
+        using (var doc = PresentationDocument.Create(stream, PresentationDocumentType.Presentation))
+        {
+            var presentationPart = doc.AddPresentationPart();
+            presentationPart.Presentation = new Presentation(
+                new SlideIdList(new SlideId { Id = 256, RelationshipId = "rId2" }));
+
+            var slidePart = presentationPart.AddNewPart<SlidePart>("rId2");
+            slidePart.Slide = new Slide(new CommonSlideData(new ShapeTree(
+                new NonVisualGroupShapeProperties(
+                    new NonVisualDrawingProperties { Id = 1, Name = "" },
+                    new NonVisualGroupShapeDrawingProperties(),
+                    new ApplicationNonVisualDrawingProperties()),
+                new GroupShapeProperties(),
+                new Shape(
+                    new NonVisualShapeProperties(
+                        new NonVisualDrawingProperties { Id = 2, Name = "Title" },
+                        new NonVisualShapeDrawingProperties(),
+                        new ApplicationNonVisualDrawingProperties()),
+                    new ShapeProperties(),
+                    new TextBody(
+                        new D.BodyProperties(),
+                        new D.Paragraph(new D.Run(new D.Text("SlideOnlyText"))))))));
+            // No NotesSlidePart added
+        }
+        stream.Position = 0;
+
+        var result = _extractor.GetText(stream);
+
+        Assert.Contains("SlideOnlyText", result);
+    }
+
+    [Fact]
     public void GetText_WithPresentationContainingNotes_ExtractsNotesText()
     {
         using var stream = new MemoryStream();

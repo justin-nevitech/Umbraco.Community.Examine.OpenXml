@@ -80,7 +80,7 @@ namespace Umbraco.Community.Examine.OpenXml
         public void AddToIndex(params IMedia[] media)
         {
             if (!_examineManager.TryGetIndex(OpenXmlIndexConstants.OpenXmlIndexName, out var index)) return;
-            var mediaToIndex = media.Where(m => OpenXmlFileExtensions.Contains(m.GetValue<string>(OpenXmlIndexConstants.UmbracoMediaExtensionPropertyAlias))).ToArray();
+            var mediaToIndex = media.Where(m => OpenXmlFileExtensions.Contains(m.GetValue<string>(OpenXmlIndexConstants.UmbracoMediaExtensionPropertyAlias) ?? string.Empty)).ToArray();
             if (mediaToIndex.Length > 0)
                 index.IndexItems(_mediaValueSetBuilder.GetValueSets(mediaToIndex));
         }
@@ -106,12 +106,12 @@ namespace Umbraco.Community.Examine.OpenXml
                 mediaParentId = _parentId.Value;
             }
 
-            IMedia[] media;
+            long total;
 
             do
             {
-                media = _mediaService.GetPagedDescendants(mediaParentId, pageIndex, pageSize, out _)
-                    .Where(m => OpenXmlFileExtensions.Contains(m.GetValue<string>(OpenXmlIndexConstants.UmbracoMediaExtensionPropertyAlias)))
+                var media = _mediaService.GetPagedDescendants(mediaParentId, pageIndex, pageSize, out total)
+                    .Where(m => OpenXmlFileExtensions.Contains(m.GetValue<string>(OpenXmlIndexConstants.UmbracoMediaExtensionPropertyAlias) ?? string.Empty))
                     .ToArray();
 
                 if (media.Length > 0)
@@ -123,7 +123,7 @@ namespace Umbraco.Community.Examine.OpenXml
                 }
 
                 pageIndex++;
-            } while (media.Length == pageSize);
+            } while (pageIndex * pageSize < total);
         }
     }
 }

@@ -43,4 +43,28 @@ public class OpenXmlIndexConstantsTests
     {
         Assert.Equal("openxml", OpenXmlIndexConstants.OpenXmlCategory);
     }
+
+    [Fact]
+    public void MaxExtractedContentLength_Is10MB()
+    {
+        Assert.Equal(10 * 1024 * 1024, OpenXmlIndexConstants.MaxExtractedContentLength);
+    }
+
+    [Fact]
+    public void MaxFileSize_Is100MB()
+    {
+        Assert.Equal(100 * 1024 * 1024, OpenXmlIndexConstants.MaxFileSize);
+    }
+
+    [Fact]
+    public void MaxSharedStringCount_Is1Million()
+    {
+        Assert.Equal(1_000_000, OpenXmlIndexConstants.MaxSharedStringCount);
+    }
+
+    [Fact]
+    public void MaxCharactersInPart_Is10Million()
+    {
+        Assert.Equal(10_000_000, OpenXmlIndexConstants.MaxCharactersInPart);
+    }
 }

@@ -13,7 +13,7 @@ namespace Umbraco.Community.Examine.OpenXml
     /// </summary>
     public class OpenXmlIndexValueSetBuilder : IOpenXmlIndexValueSetBuilder
     {
-        private OpenXmlService _openXmlService;
+        private readonly OpenXmlService _openXmlService;
         private readonly ILogger<OpenXmlIndexValueSetBuilder> _logger;
 
         public OpenXmlIndexValueSetBuilder(OpenXmlService openXmlService, ILogger<OpenXmlIndexValueSetBuilder> logger)
@@ -42,7 +42,7 @@ namespace Umbraco.Community.Examine.OpenXml
                 }
                 var indexValues = new Dictionary<string, object>
                 {
-                    ["nodeName"] = item.Name!,
+                    ["nodeName"] = item.Name ?? string.Empty,
                     ["id"] = item.Id,
                     ["path"] = item.Path,
                     [OpenXmlIndexConstants.OpenXmlContentFieldName] = fileOpenXmlContent

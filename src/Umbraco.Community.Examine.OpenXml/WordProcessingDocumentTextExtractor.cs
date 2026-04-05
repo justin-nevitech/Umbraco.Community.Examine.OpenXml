@@ -11,7 +11,8 @@ namespace Umbraco.Community.Examine.OpenXml
         {
             StringBuilder builder = new StringBuilder();
 
-            using (var wordprocessingDocument = WordprocessingDocument.Open(fileStream, false))
+            var openSettings = new OpenSettings { MaxCharactersInPart = OpenXmlIndexConstants.MaxCharactersInPart };
+            using (var wordprocessingDocument = WordprocessingDocument.Open(fileStream, false, openSettings))
             {
                 if (wordprocessingDocument.MainDocumentPart != null)
                 {
@@ -48,6 +49,9 @@ namespace Umbraco.Community.Examine.OpenXml
 
             foreach (var paragraph in element.Descendants<Paragraph>())
             {
+                if (builder.Length >= OpenXmlIndexConstants.MaxExtractedContentLength)
+                    return;
+
                 var text = paragraph.InnerText;
 
                 if (!String.IsNullOrEmpty(text))

@@ -38,6 +38,8 @@ The index is automatically kept in sync when media items are created, updated, o
 | Umbraco | .NET | Status |
 |---|---|---|
 | 13.x | .NET 8 | Supported |
+| 14.x | .NET 8 | Not supported (EOL) |
+| 15.x | .NET 9 | Not supported (EOL) |
 | 16.x | .NET 9 | Supported |
 | 17.x | .NET 10 | Supported |
 
@@ -102,6 +104,19 @@ The `OpenXmlIndexConstants` class provides strongly-typed constants for querying
 | `OpenXmlIndexName` | `"OpenXmlIndex"` | Index name for `IExamineManager.TryGetIndex()` |
 | `OpenXmlContentFieldName` | `"fileTextContent"` | Field name containing the extracted document text |
 | `OpenXmlCategory` | `"openxml"` | Category to scope queries to OpenXml documents |
+
+## Limits
+
+To protect against malicious or oversized documents, the following limits are applied during text extraction:
+
+| Limit | Value | Description |
+|---|---|---|
+| Max file size | 100 MB | Files exceeding this size are skipped entirely |
+| Max extracted content | 10 MB | Text extraction stops once this limit is reached |
+| Max characters per part | 10,000,000 | Limits characters per OpenXml document part to prevent decompression bombs |
+| Max shared strings (Excel) | 1,000,000 | Caps the number of shared string entries loaded from `.xlsx` files |
+
+Documents that exceed these limits are logged as warnings and excluded from the index. These values are defined in the `OpenXmlIndexConstants` class.
 
 ## Acknowledgments
 

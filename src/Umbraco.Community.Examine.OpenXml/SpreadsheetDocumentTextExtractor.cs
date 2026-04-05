@@ -9,7 +9,8 @@ namespace Umbraco.Community.Examine.OpenXml
         {
             StringBuilder builder = new StringBuilder();
 
-            using (var spreadsheetDocument = SpreadsheetDocument.Open(fileStream, false))
+            var openSettings = new OpenSettings { MaxCharactersInPart = OpenXmlIndexConstants.MaxCharactersInPart };
+            using (var spreadsheetDocument = SpreadsheetDocument.Open(fileStream, false, openSettings))
             {
                 if (spreadsheetDocument.WorkbookPart != null)
                 {

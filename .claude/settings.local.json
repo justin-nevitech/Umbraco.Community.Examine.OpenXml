@@ -50,7 +50,17 @@
       "Bash(find /c/Users/JustinNeville/.nuget/packages/umbraco.cms.infrastructure/17.0.0 -name *.dll)",
       "Bash(dotnet msbuild:*)",
       "Bash(find /c/Users/JustinNeville/.nuget/packages/umbraco.cms.core/17.0.0 -name *.dll)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(start notepad:*)",
+      "WebSearch",
+      "Bash(unzip -p nupkg-final-check/Umbraco.Community.Examine.OpenXml.1.0.0.nupkg Umbraco.Community.Examine.OpenXml.nuspec)",
+      "Bash(dotnet list:*)",
+      "Bash(grep -v \"^$\\\\|^\\\\s*$\\\\|warning\\\\|https://github.com\\\\|The following\\\\|A newer\")",
+      "Bash(mkdir -p \"D:/My Documents/Projects/Open Source/Umbraco.Community.Examine.OpenXml/.claude/commands\")",
+      "Bash(BASE=\"D:/My Documents/Projects/Open Source/Umbraco.Community.Examine.OpenXml/.claude\")",
+      "Bash(cp \"$BASE/skills/review/SKILL.md\" \"$BASE/commands/review.md\")",
+      "Bash(cp \"$BASE/skills/pre-publish/SKILL.md\" \"$BASE/commands/pre-publish.md\")",
+      "Bash(cp \"$BASE/skills/security-scan/SKILL.md\" \"$BASE/commands/security-scan.md\")"
     ]
   }
 }

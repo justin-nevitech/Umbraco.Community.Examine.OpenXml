@@ -275,6 +275,90 @@ public class OpenXmlCacheNotificationHandlerTests
     }
 
     [Fact]
+    public void Handle_RefreshByPayloadWithWrongObjectType_LogsWarningAndReturns()
+    {
+        _runtimeStateMock.Setup(r => r.Level).Returns(RuntimeLevel.Run);
+        var handler = CreateHandler();
+        // RefreshByPayload message type but with a non-JsonPayload[] object
+        var notification = new Umbraco.Cms.Core.Notifications.MediaCacheRefresherNotification("not a payload array", MessageType.RefreshByPayload);
+
+        handler.Handle(notification);
+
+        _mediaServiceMock.Verify(m => m.GetById(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public void Handle_ExceptionDuringProcessing_DoesNotThrow()
+    {
+        _runtimeStateMock.Setup(r => r.Level).Returns(RuntimeLevel.Run);
+        _mediaServiceMock.Setup(m => m.GetById(It.IsAny<int>())).Throws(new InvalidOperationException("Database error"));
+
+        var handler = CreateHandler();
+        var payloads = new[] { CreatePayload(42, TreeChangeTypes.RefreshNode) };
+        var notification = new Umbraco.Cms.Core.Notifications.MediaCacheRefresherNotification(payloads, MessageType.RefreshByPayload);
+
+        // Should not throw — handler catches and logs
+        var exception = Record.Exception(() => handler.Handle(notification));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Handle_RefreshBranchWithMultiplePages_ProcessesAllPages()
+    {
+        _runtimeStateMock.Setup(r => r.Level).Returns(RuntimeLevel.Run);
+
+        var parentMedia = new Mock<IMedia>();
+        parentMedia.Setup(m => m.Id).Returns(10);
+        parentMedia.Setup(m => m.Trashed).Returns(false);
+        parentMedia.Setup(m => m.GetValue<string>(OpenXmlIndexConstants.UmbracoMediaExtensionPropertyAlias, null, null, false))
+            .Returns("docx");
+        _mediaServiceMock.Setup(m => m.GetById(10)).Returns(parentMedia.Object);
+
+        var descendant1 = new Mock<IMedia>();
+        descendant1.Setup(m => m.Id).Returns(11);
+        descendant1.Setup(m => m.Trashed).Returns(false);
+        descendant1.Setup(m => m.GetValue<string>(OpenXmlIndexConstants.UmbracoMediaExtensionPropertyAlias, null, null, false))
+            .Returns("docx");
+
+        var descendant2 = new Mock<IMedia>();
+        descendant2.Setup(m => m.Id).Returns(12);
+        descendant2.Setup(m => m.Trashed).Returns(false);
+        descendant2.Setup(m => m.GetValue<string>(OpenXmlIndexConstants.UmbracoMediaExtensionPropertyAlias, null, null, false))
+            .Returns("docx");
+
+        // Page 0: 1 descendant, total = 501 (more than one page of 500)
+        long totalRecords = 501;
+        _mediaServiceMock.Setup(m => m.GetPagedDescendants(10, 0, 500, out totalRecords,
+                It.IsAny<Umbraco.Cms.Core.Persistence.Querying.IQuery<IMedia>?>(),
+                It.IsAny<Umbraco.Cms.Core.Services.Ordering?>()))
+            .Returns(new[] { descendant1.Object });
+
+        // Page 1: 1 descendant
+        _mediaServiceMock.Setup(m => m.GetPagedDescendants(10, 1, 500, out totalRecords,
+                It.IsAny<Umbraco.Cms.Core.Persistence.Querying.IQuery<IMedia>?>(),
+                It.IsAny<Umbraco.Cms.Core.Services.Ordering?>()))
+            .Returns(new[] { descendant2.Object });
+
+        _valueSetBuilderMock.Setup(b => b.GetValueSets(It.IsAny<IMedia[]>()))
+            .Returns(new[] { new ValueSet("10", "openxml", "File", new Dictionary<string, object> { ["test"] = "value" }) });
+
+        var handler = CreateHandler();
+        var payloads = new[] { CreatePayload(10, TreeChangeTypes.RefreshBranch) };
+        var notification = new Umbraco.Cms.Core.Notifications.MediaCacheRefresherNotification(payloads, MessageType.RefreshByPayload);
+
+        handler.Handle(notification);
+
+        // Should have fetched both pages
+        _mediaServiceMock.Verify(m => m.GetPagedDescendants(10, 0, 500, out totalRecords,
+            It.IsAny<Umbraco.Cms.Core.Persistence.Querying.IQuery<IMedia>?>(),
+            It.IsAny<Umbraco.Cms.Core.Services.Ordering?>()), Times.Once);
+        _mediaServiceMock.Verify(m => m.GetPagedDescendants(10, 1, 500, out totalRecords,
+            It.IsAny<Umbraco.Cms.Core.Persistence.Querying.IQuery<IMedia>?>(),
+            It.IsAny<Umbraco.Cms.Core.Services.Ordering?>()), Times.Once);
+    }
+
+    [Fact]
     public void Handle_RefreshNodeWithoutBranch_DoesNotProcessDescendants()
     {
         _runtimeStateMock.Setup(r => r.Level).Returns(RuntimeLevel.Run);

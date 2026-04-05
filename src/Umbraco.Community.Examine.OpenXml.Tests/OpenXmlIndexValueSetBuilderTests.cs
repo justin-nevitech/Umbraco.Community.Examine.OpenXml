@@ -161,6 +161,18 @@ public class OpenXmlIndexValueSetBuilderTests
         Assert.Equal(2, result.Count);
     }
 
+    [Fact]
+    public void GetValueSets_MediaWithNullName_UsesEmptyStringForNodeName()
+    {
+        var media = CreateMockMedia(1, null!, "/media/test.docx", "-1,1");
+
+        var result = _builder.GetValueSets(media).ToList();
+
+        Assert.Single(result);
+        var valueSet = result[0];
+        Assert.Equal(string.Empty, valueSet.Values["nodeName"][0]);
+    }
+
     private static IMedia CreateMockMedia(int id, string name, string? umbracoFilePath, string path)
     {
         var mediaMock = new Mock<IMedia>();

@@ -13,14 +13,21 @@ namespace Umbraco.Community.Examine.OpenXml
 
             var sharedStrings = workbookPart.SharedStringTablePart?.SharedStringTable?
                 .Elements<SharedStringItem>()
+                .Take(OpenXmlIndexConstants.MaxSharedStringCount)
                 .ToList();
 
             foreach (var worksheet in workbookPart.WorksheetParts)
             {
+                if (builder.Length >= OpenXmlIndexConstants.MaxExtractedContentLength)
+                    break;
+
                 using (var reader = OpenXmlReader.Create(worksheet, false))
                 {
                     while (reader.Read())
                     {
+                        if (builder.Length >= OpenXmlIndexConstants.MaxExtractedContentLength)
+                            break;
+
                         if (reader.ElementType == typeof(Cell))
                         {
                             var cell = reader.LoadCurrentElement() as Cell;

@@ -134,6 +134,60 @@ public class OpenXmlServiceTests
     }
 
     [Fact]
+    public void ExtractOpenXml_FileExceedsMaxSize_ReturnsEmptyString()
+    {
+        var filePath = "/media/huge.docx";
+        var stream = new Mock<Stream>();
+        stream.Setup(s => s.Length).Returns(OpenXmlIndexConstants.MaxFileSize + 1);
+        stream.Setup(s => s.CanRead).Returns(true);
+
+        var fileSystemMock = new Mock<IFileSystem>();
+        fileSystemMock.Setup(f => f.OpenFile(filePath)).Returns(stream.Object);
+
+        var service = CreateService(fileSystemMock);
+        var result = service.ExtractOpenXml(filePath);
+
+        Assert.Equal(string.Empty, result);
+        _factoryMock.Verify(f => f.GetOpenXmlTextExtractor(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void ExtractOpenXml_FileAtExactMaxSize_ProcessesNormally()
+    {
+        var filePath = "/media/exact.docx";
+        var stream = new Mock<Stream>();
+        stream.Setup(s => s.Length).Returns(OpenXmlIndexConstants.MaxFileSize); // exactly at limit, not over
+        stream.Setup(s => s.CanRead).Returns(true);
+
+        var fileSystemMock = new Mock<IFileSystem>();
+        fileSystemMock.Setup(f => f.OpenFile(filePath)).Returns(stream.Object);
+        _factoryMock.Setup(f => f.GetOpenXmlTextExtractor("docx")).Returns(_extractorMock.Object);
+        _extractorMock.Setup(e => e.GetText(stream.Object)).Returns("content");
+
+        var service = CreateService(fileSystemMock);
+        var result = service.ExtractOpenXml(filePath);
+
+        Assert.Equal("content", result);
+    }
+
+    [Fact]
+    public void ExtractOpenXml_ExceptionDuringExtraction_ReturnsEmptyString()
+    {
+        var filePath = "/media/bad.docx";
+        var stream = new MemoryStream();
+
+        var fileSystemMock = new Mock<IFileSystem>();
+        fileSystemMock.Setup(f => f.OpenFile(filePath)).Returns(stream);
+        _factoryMock.Setup(f => f.GetOpenXmlTextExtractor("docx")).Returns(_extractorMock.Object);
+        _extractorMock.Setup(e => e.GetText(stream)).Throws(new InvalidOperationException("Corrupted"));
+
+        var service = CreateService(fileSystemMock);
+        var result = service.ExtractOpenXml(filePath);
+
+        Assert.Equal(string.Empty, result);
+    }
+
+    [Fact]
     public void ExtractOpenXml_ExceptionDuringExtraction_IsHandledByCallerInValueSetBuilder()
     {
         // Set up OpenXmlService to throw when extracting

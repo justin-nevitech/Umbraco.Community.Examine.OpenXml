@@ -117,6 +117,146 @@ public class SpreadsheetDocumentTextExtractorTests
     }
 
     [Fact]
+    public void GetText_WithSharedStringIndexOutOfRange_DoesNotThrow()
+    {
+        using var stream = new MemoryStream();
+        using (var doc = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
+        {
+            var workbookPart = doc.AddWorkbookPart();
+
+            // Create a shared string table with only 2 entries
+            var sharedStringPart = workbookPart.AddNewPart<SharedStringTablePart>();
+            sharedStringPart.SharedStringTable = new SharedStringTable(
+                new SharedStringItem(new DocumentFormat.OpenXml.Spreadsheet.Text("Hello")),
+                new SharedStringItem(new DocumentFormat.OpenXml.Spreadsheet.Text("World")));
+
+            var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            worksheetPart.Worksheet = new Worksheet(new SheetData(
+                new Row(
+                    // Valid index
+                    new Cell { CellValue = new CellValue("0"), DataType = CellValues.SharedString },
+                    // Out-of-range index — should not throw
+                    new Cell { CellValue = new CellValue("99"), DataType = CellValues.SharedString })));
+
+            workbookPart.Workbook = new Workbook(new Sheets(
+                new Sheet { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" }));
+        }
+        stream.Position = 0;
+
+        var result = _extractor.GetText(stream);
+
+        Assert.Contains("Hello", result);
+        // Out-of-range index falls back to CellValue.InnerText ("99")
+        Assert.Contains("99", result);
+    }
+
+    [Fact]
+    public void GetText_WithNonNumericSharedStringReference_DoesNotThrow()
+    {
+        using var stream = new MemoryStream();
+        using (var doc = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
+        {
+            var workbookPart = doc.AddWorkbookPart();
+
+            var sharedStringPart = workbookPart.AddNewPart<SharedStringTablePart>();
+            sharedStringPart.SharedStringTable = new SharedStringTable(
+                new SharedStringItem(new DocumentFormat.OpenXml.Spreadsheet.Text("Hello")));
+
+            var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            worksheetPart.Worksheet = new Worksheet(new SheetData(
+                new Row(
+                    // Non-numeric value where int.TryParse will fail
+                    new Cell { CellValue = new CellValue("abc"), DataType = CellValues.SharedString })));
+
+            workbookPart.Workbook = new Workbook(new Sheets(
+                new Sheet { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" }));
+        }
+        stream.Position = 0;
+
+        var result = _extractor.GetText(stream);
+
+        // Falls back to CellValue.InnerText
+        Assert.Contains("abc", result);
+    }
+
+    [Fact]
+    public void GetText_WithCellsContainingNullCellValue_DoesNotThrow()
+    {
+        using var stream = new MemoryStream();
+        using (var doc = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
+        {
+            var workbookPart = doc.AddWorkbookPart();
+            var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            worksheetPart.Worksheet = new Worksheet(new SheetData(
+                new Row(
+                    new Cell(), // No CellValue at all
+                    new Cell { CellValue = new CellValue("ValidValue") })));
+
+            workbookPart.Workbook = new Workbook(new Sheets(
+                new Sheet { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" }));
+        }
+        stream.Position = 0;
+
+        var result = _extractor.GetText(stream);
+
+        Assert.Contains("ValidValue", result);
+    }
+
+    [Fact]
+    public void GetText_WithEmptyCellValue_SkipsEmptyCells()
+    {
+        using var stream = new MemoryStream();
+        using (var doc = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
+        {
+            var workbookPart = doc.AddWorkbookPart();
+            var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            worksheetPart.Worksheet = new Worksheet(new SheetData(
+                new Row(
+                    new Cell { CellValue = new CellValue("") },
+                    new Cell { CellValue = new CellValue("   ") },
+                    new Cell { CellValue = new CellValue("ActualData") })));
+
+            workbookPart.Workbook = new Workbook(new Sheets(
+                new Sheet { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" }));
+        }
+        stream.Position = 0;
+
+        var result = _extractor.GetText(stream);
+
+        Assert.Contains("ActualData", result);
+    }
+
+    [Fact]
+    public void GetText_WithSharedStringHavingNullText_DoesNotThrow()
+    {
+        using var stream = new MemoryStream();
+        using (var doc = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
+        {
+            var workbookPart = doc.AddWorkbookPart();
+
+            // Shared string table with an entry that has no Text child
+            var sharedStringPart = workbookPart.AddNewPart<SharedStringTablePart>();
+            sharedStringPart.SharedStringTable = new SharedStringTable(
+                new SharedStringItem(), // No Text element
+                new SharedStringItem(new DocumentFormat.OpenXml.Spreadsheet.Text("ValidShared")));
+
+            var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            worksheetPart.Worksheet = new Worksheet(new SheetData(
+                new Row(
+                    new Cell { CellValue = new CellValue("0"), DataType = CellValues.SharedString },
+                    new Cell { CellValue = new CellValue("1"), DataType = CellValues.SharedString })));
+
+            workbookPart.Workbook = new Workbook(new Sheets(
+                new Sheet { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" }));
+        }
+        stream.Position = 0;
+
+        var result = _extractor.GetText(stream);
+
+        Assert.Contains("ValidShared", result);
+    }
+
+    [Fact]
     public void GetText_WithMultipleWorksheets_ExtractsFromAll()
     {
         using var stream = new MemoryStream();

@@ -37,62 +37,76 @@ namespace Umbraco.Community.Examine.OpenXml
                 return;
             }
 
-            if (notification.MessageType != MessageType.RefreshByPayload)
+            try
             {
-                _logger.LogWarning("Unsupported message type {MessageType} received, skipping", notification.MessageType);
-                return;
-            }
-
-            foreach (var payload in (MediaCacheRefresher.JsonPayload[])notification.MessageObject)
-            {
-                if (payload.ChangeTypes.HasType(TreeChangeTypes.Remove))
+                if (notification.MessageType != MessageType.RefreshByPayload)
                 {
-                    _openXmlIndexPopulator.RemoveFromIndex(payload.Id);
+                    _logger.LogWarning("Unsupported message type {MessageType} received, skipping", notification.MessageType);
+                    return;
                 }
-                else if (payload.ChangeTypes.HasType(TreeChangeTypes.RefreshAll))
+
+                var payloads = notification.MessageObject as MediaCacheRefresher.JsonPayload[];
+                if (payloads == null)
                 {
-                    // RefreshAll is not supported by Examine index operations.
-                    // A full index rebuild should be triggered from the Examine Management dashboard instead.
-                    _logger.LogDebug("RefreshAll received, skipping. Use the Examine Management dashboard to rebuild the index");
+                    _logger.LogWarning("Unexpected message object type {Type}, skipping", notification.MessageObject?.GetType().Name);
+                    return;
                 }
-                else // RefreshNode or RefreshBranch (maybe trashed)
+
+                foreach (var payload in payloads)
                 {
-                    var media = _mediaService.GetById(payload.Id);
-
-                    if (media is null)
-                    {
-                        _openXmlIndexPopulator.RemoveFromIndex(payload.Id);
-                        continue;
-                    }
-
-                    if (media.Trashed)
+                    if (payload.ChangeTypes.HasType(TreeChangeTypes.Remove))
                     {
                         _openXmlIndexPopulator.RemoveFromIndex(payload.Id);
                     }
-                    else
+                    else if (payload.ChangeTypes.HasType(TreeChangeTypes.RefreshAll))
                     {
-                        _openXmlIndexPopulator.AddToIndex(media);
+                        // RefreshAll is not supported by Examine index operations.
+                        // A full index rebuild should be triggered from the Examine Management dashboard instead.
+                        _logger.LogDebug("RefreshAll received, skipping. Use the Examine Management dashboard to rebuild the index");
                     }
-
-                    // Branch
-                    if (payload.ChangeTypes.HasType(TreeChangeTypes.RefreshBranch))
+                    else // RefreshNode or RefreshBranch (maybe trashed)
                     {
-                        const int pageSize = 500;
-                        var page = 0;
-                        var total = long.MaxValue;
-                        while (page * pageSize < total)
+                        var media = _mediaService.GetById(payload.Id);
+
+                        if (media is null)
                         {
-                            var descendants = _mediaService.GetPagedDescendants(media.Id, page++, pageSize, out total);
-                            foreach (var descendant in descendants)
+                            _openXmlIndexPopulator.RemoveFromIndex(payload.Id);
+                            continue;
+                        }
+
+                        if (media.Trashed)
+                        {
+                            _openXmlIndexPopulator.RemoveFromIndex(payload.Id);
+                        }
+                        else
+                        {
+                            _openXmlIndexPopulator.AddToIndex(media);
+                        }
+
+                        // Branch
+                        if (payload.ChangeTypes.HasType(TreeChangeTypes.RefreshBranch))
+                        {
+                            const int pageSize = 500;
+                            var page = 0;
+                            var total = long.MaxValue;
+                            while (page * pageSize < total)
                             {
-                                if (descendant.Trashed)
-                                    _openXmlIndexPopulator.RemoveFromIndex(descendant);
-                                else
-                                    _openXmlIndexPopulator.AddToIndex(descendant);
+                                var descendants = _mediaService.GetPagedDescendants(media.Id, page++, pageSize, out total);
+                                foreach (var descendant in descendants)
+                                {
+                                    if (descendant.Trashed)
+                                        _openXmlIndexPopulator.RemoveFromIndex(descendant);
+                                    else
+                                        _openXmlIndexPopulator.AddToIndex(descendant);
+                                }
                             }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling media cache notification");
             }
         }
     }
