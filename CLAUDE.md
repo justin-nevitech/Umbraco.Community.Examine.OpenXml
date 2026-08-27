@@ -5,34 +5,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Test Commands
 
 ```bash
-# Build entire solution
+# Build entire solution (all 3 package variants + all 3 test suites + all 3 test sites)
 dotnet build src/Umbraco.Community.Examine.OpenXml.slnx
 
-# Build package project only (all 3 TFMs)
-dotnet build src/Umbraco.Community.Examine.OpenXml/Umbraco.Community.Examine.OpenXml.csproj
+# Build one package variant (v13 | v17 | v18)
+dotnet build src/Umbraco.Community.Examine.OpenXml.v18/Umbraco.Community.Examine.OpenXml.v18.csproj
 
-# Run all tests
-dotnet test src/Umbraco.Community.Examine.OpenXml.Tests/Umbraco.Community.Examine.OpenXml.Tests.csproj
+# Run all tests, on every supported Umbraco major
+dotnet test src/Umbraco.Community.Examine.OpenXml.slnx
+
+# Run the suite against one major
+dotnet test src/Umbraco.Community.Examine.OpenXml.Tests.v18/Umbraco.Community.Examine.OpenXml.Tests.v18.csproj
 
 # Run a single test
-dotnet test src/Umbraco.Community.Examine.OpenXml.Tests/Umbraco.Community.Examine.OpenXml.Tests.csproj --filter "FullyQualifiedName~ClassName.MethodName"
+dotnet test src/Umbraco.Community.Examine.OpenXml.Tests.v18/Umbraco.Community.Examine.OpenXml.Tests.v18.csproj --filter "FullyQualifiedName~ClassName.MethodName"
 
-# Pack for NuGet (version injected by CI via /p:Version)
-dotnet pack src/Umbraco.Community.Examine.OpenXml/Umbraco.Community.Examine.OpenXml.csproj -c Release
+# Pack for NuGet (version injected by CI via /p:Version; package major must match the variant)
+dotnet pack src/Umbraco.Community.Examine.OpenXml.v18/Umbraco.Community.Examine.OpenXml.v18.csproj -c Release
 ```
 
 ## Architecture
 
 This is an Umbraco CMS package that extracts text from OpenXml documents (.docx, .pptx, .xlsx) in the media library and indexes it into a dedicated Examine/Lucene index called `OpenXmlIndex`.
 
-### Multi-targeting
+### Multi-major support
 
-The package targets `net8.0`, `net9.0`, and `net10.0` with conditional Umbraco package references:
-- net8.0 → Umbraco.Cms.Web.Common 13.0.0
-- net9.0 → Umbraco.Cms.Web.Common 16.0.0
-- net10.0 → Umbraco.Cms.Web.Common 17.0.0
+`src/Umbraco.Community.Examine.OpenXml/` is **not a project** — it is the shared source folder,
+holding all C# sources plus `Examine.OpenXml.Shared.props`. Three wrapper projects own no sources
+of their own, import that props file, and compile the same files against a different Umbraco major:
 
-The code is identical across all targets — no `#if` preprocessor directives needed.
+| Project | TFM | Umbraco.Cms.Web.Common | Produces |
+|---|---|---|---|
+| `Umbraco.Community.Examine.OpenXml.v13` | net8.0 | `[13.0.0, 14.0.0)` | package `13.x` |
+| `Umbraco.Community.Examine.OpenXml.v17` | net10.0 | `[17.0.0, 18.0.0)` | package `17.x` |
+| `Umbraco.Community.Examine.OpenXml.v18` | net10.0 | `[18.0.0, 19.0.0)` | package `18.x` |
+
+TFM-based multi-targeting cannot express this because Umbraco 17 and 18 both run on net10.0. All
+three variants share one `PackageId` and one assembly name; releases are version-aligned, with the
+package major tracking the Umbraco major. Add new sources to the shared folder — every variant
+picks them up automatically.
+
+The code is identical across all majors — no `#if` preprocessor directives needed.
+
+**Full detail lives in [docs/BUILDING.md](docs/BUILDING.md). Read it before touching the project
+layout, the release workflow, or the supported-version set.**
 
 ### Core Flow
 
@@ -67,15 +83,19 @@ All extractors wrap OpenXml documents in `using` statements to prevent resource 
 
 ## Solution Structure
 
-- `src/Umbraco.Community.Examine.OpenXml/` — Package library (multi-targeted)
-- `src/Umbraco.Community.Examine.OpenXml.Tests/` — Unit tests (xUnit + Moq, 119 tests)
-- `src/Umbraco.Community.Examine.OpenXml.TestSite/` — Umbraco 17 test site (net10.0, port 44379)
+- `src/Umbraco.Community.Examine.OpenXml/` — Shared package sources (**not a project**) + `Examine.OpenXml.Shared.props`
+- `src/Umbraco.Community.Examine.OpenXml.v13|.v17|.v18/` — Package projects, one per Umbraco major
+- `src/Umbraco.Community.Examine.OpenXml.Tests/` — Shared test sources (**not a project**, xUnit + Moq, 119 tests) + `Examine.OpenXml.Tests.Shared.props`
+- `src/Umbraco.Community.Examine.OpenXml.Tests.v13|.v17|.v18/` — Test projects, one per Umbraco major
 - `src/Umbraco.Community.Examine.OpenXml.TestSite.v13/` — Umbraco 13 test site (net8.0, port 44380)
-- `src/Umbraco.Community.Examine.OpenXml.TestSite.v16/` — Umbraco 16 test site (net9.0, port 44381)
+- `src/Umbraco.Community.Examine.OpenXml.TestSite.v17/` — Umbraco 17 test site (net10.0, port 44379)
+- `src/Umbraco.Community.Examine.OpenXml.TestSite.v18/` — Umbraco 18 test site (net10.0, port 44381)
 
 ### Test Sites
 
-Each test site uses the Clean starter kit, uSync for content import, and unattended install (admin@example.com / 1234567890). The v13 site uses uSync folder `v9/`, while v16 and v17 use `v17/`. All three test sites reference the package via ProjectReference.
+Each test site uses the Clean starter kit, uSync for content import, and unattended install (admin@example.com / 1234567890). The v13 site uses uSync folder `v9/`, v17 uses `v17/` and v18 uses `v18/`. Each site references its own matching package project via ProjectReference, and all three can run at once.
+
+Unlike the package projects — which pin the **lowest** release of their major so every patch is a valid host — the test sites track the **latest** release of their major.
 
 ## Coding Standards
 
@@ -100,10 +120,12 @@ Each test site uses the Clean starter kit, uSync for content import, and unatten
 - Add content size limits when processing untrusted files to prevent OOM from malicious documents
 - Null-coalesce (`?? string.Empty`) when passing nullable values to methods that don't accept null (e.g. `Contains()`)
 
-### Multi-targeting
-- Use lowest minor version per Umbraco major (13.0.0, 16.0.0, 17.0.0) so all patch versions are compatible
+### Multi-major support
+- Pin the lowest release of each Umbraco major (13.0.0, 17.0.0, 18.0.0) as the range floor so all patch versions are compatible
+- Put new sources in the shared folders, never in a `.vNN` wrapper project — wrappers own no sources
+- Adding or dropping an Umbraco major means: a package project, a test project, a test site, a `release.yml` case, the `.slnx`, and `docs/BUILDING.md`
 - Only reference packages actually used — check with `grep` for namespace usage before adding
-- Avoid Umbraco API packages (`Umbraco.Cms.Api.Common`, `Umbraco.Cms.Api.Management`) unless the code references their types — they cause version conflicts in multi-target builds
+- Avoid Umbraco API packages (`Umbraco.Cms.Api.Common`, `Umbraco.Cms.Api.Management`) unless the code references their types — they cause version conflicts
 
 ### Testing
 - Unit tests must not require an Umbraco instance or Lucene index
@@ -123,4 +145,7 @@ Project-specific slash commands in `.claude/commands/`:
 
 ## Release Process
 
-Push a semantic version tag (e.g. `1.0.0`) to trigger the GitHub Actions workflow which packs and publishes to NuGet using the `NUGET_API_KEY` secret.
+Releases are version-aligned: the package major tracks the Umbraco major. Push a semantic version
+tag whose major is 13, 17 or 18 (e.g. `18.0.0`) to trigger the GitHub Actions workflow, which
+selects the matching package project from the tag, runs that major's test suite, then packs and
+publishes to NuGet using the `NUGET_API_KEY` secret. A tag with any other major fails the build.

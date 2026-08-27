@@ -1,38 +1,35 @@
-      _       _              _                                                          
-     | |     | |            | |                                                         
-   __| | ___ | |_ _ __   ___| |_   _ __   _____      __                                 
-  / _` |/ _ \| __| '_ \ / _ \ __| | '_ \ / _ \ \ /\ / /                                 
- | (_| | (_) | |_| | | |  __/ |_  | | | |  __/\ V  V /                                  
-  \__,_|\___/ \__|_| |_|\___|\__| |_| |_|\___| \_/\_/   _                 _             
-                 | |                                   | |               (_)            
-  _   _ _ __ ___ | |__  _ __ __ _  ___ ___     _____  _| |_ ___ _ __  ___ _  ___  _ __  
- | | | | '_ ` _ \| '_ \| '__/ _` |/ __/ _ \   / _ \ \/ / __/ _ \ '_ \/ __| |/ _ \| '_ \ 
- | |_| | | | | | | |_) | | | (_| | (_| (_) | |  __/>  <| ||  __/ | | \__ \ | (_) | | | |
-  \__,_|_| |_| |_|_.__/|_|  \__,_|\___\___/   \___/_/\_\\__\___|_| |_|___/_|\___/|_| |_|
-                                                                                        
+== Umbraco.Community.Examine.OpenXml - shared sources ==
 
-== Requirements ==
-* Node LTS Version 20.17.0+
-* Use a tool such as NVM (Node Version Manager) for your OS to help manage multiple versions of Node
+This folder is NOT a project. It has no .csproj.
 
-== Node Version Manager tools ==
-* https://github.com/coreybutler/nvm-windows
-* https://github.com/nvm-sh/nvm
-* https://docs.volta.sh/guide/getting-started
+It is the single home for the package's C# sources. Three wrapper projects compile these same
+files against a different Umbraco major, and produce the same assembly name and PackageId:
 
-== Steps ==
-* Open a terminal inside the `\Client` folder
-* Run `npm install` to install all the dependencies
-* Run `npm run build` to build the project
-* The build output is copied to `wwwroot\App_Plugins\UmbracoCommunityExamineOpenXml\umbraco-community-examine-open-xml.js`
+  ..\Umbraco.Community.Examine.OpenXml.v13   net8.0    Umbraco [13.0.0, 14.0.0)   package 13.x
+  ..\Umbraco.Community.Examine.OpenXml.v17   net10.0   Umbraco [17.0.0, 18.0.0)   package 17.x
+  ..\Umbraco.Community.Examine.OpenXml.v18   net10.0   Umbraco [18.0.0, 19.0.0)   package 18.x
 
-== File Watching ==
-* Add this Razor Class Library Project as a project reference to an Umbraco Website project
-* From the `\Client` folder run the command `npm run watch` this will monitor the changes to the *.ts files and rebuild the project
-* With the Umbraco website project running the Razor Class Library Project will refresh the browser when the build is complete
+The shared compile items and the package metadata are declared once in
+Examine.OpenXml.Shared.props, which each wrapper imports. Add new source files to THIS folder and
+all three variants pick them up automatically - never add sources to a wrapper project.
 
-== Suggestion ==
-* Use VSCode as the editor of choice as it has good tooling support for TypeScript and it will recommend a VSCode Extension for good Lit WebComponent completions
+The sources are identical across every major: there are no #if preprocessor directives. The
+package only uses Umbraco and Examine APIs that are unchanged from 13 through 18.
 
-== Other Resources ==
-* Umbraco Docs - https://docs.umbraco.com/umbraco-cms/customizing/overview
+== Build ==
+
+  dotnet build ..\Umbraco.Community.Examine.OpenXml.slnx                                    all variants
+  dotnet build ..\Umbraco.Community.Examine.OpenXml.v18\Umbraco.Community.Examine.OpenXml.v18.csproj
+
+== Tests ==
+
+The test sources mirror this layout and live in ..\Umbraco.Community.Examine.OpenXml.Tests, which
+is also a shared folder rather than a project. Three wrapper test projects (.Tests.v13, .Tests.v17,
+.Tests.v18) run the whole suite against each supported major.
+
+  dotnet test ..\Umbraco.Community.Examine.OpenXml.slnx
+
+== Full detail ==
+
+See docs\BUILDING.md in the repository root for the project layout, the version-aligned packaging
+model and the release process.

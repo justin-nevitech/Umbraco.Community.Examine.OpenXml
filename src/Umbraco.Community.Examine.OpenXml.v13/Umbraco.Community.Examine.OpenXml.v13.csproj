@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    Umbraco 13 variant of the package.
+
+    This project owns NO sources of its own: it compiles the shared files in
+    ..\Umbraco.Community.Examine.OpenXml via Examine.OpenXml.Shared.props, and produces the
+    same assembly name and PackageId as the Umbraco 17 and 18 variants. The only differences
+    between the variants are the target framework and the Umbraco.Cms.Web.Common range.
+
+    Add new source files to Umbraco.Community.Examine.OpenXml; all variants pick them up
+    automatically.
+
+    This produces the 13.x releases of the package. See docs/BUILDING.md.
+  -->
+
+  <PropertyGroup>
+    <!-- Set before the import so the shared default (net10.0) does not apply. -->
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="..\Umbraco.Community.Examine.OpenXml\Examine.OpenXml.Shared.props" />
+
+  <!--
+    The floor is the lowest release of the major, so every 13.x patch is a valid host.
+    This range flows into the packed nuspec.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="[13.0.0, 14.0.0)" />
+  </ItemGroup>
+
+</Project>

@@ -14,6 +14,12 @@ This package follows the architecture and patterns established by [UmbracoExamin
 
 ## Multi-targeting Strategy
 
+> **Superseded.** The single multi-targeted `net8.0;net9.0;net10.0` package described below shipped
+> as the `1.x` releases. It could not survive Umbraco 18, which shares `net10.0` with Umbraco 17, so
+> a TFM list can no longer distinguish the two. The package now builds one project per Umbraco major
+> and publishes version-aligned releases — see [BUILDING.md](BUILDING.md). Umbraco 16 support was
+> dropped at the same time. The rest of this section is kept as a record of the original reasoning.
+
 ### Why net8.0 / net9.0 / net10.0?
 
 Umbraco versions map to specific .NET versions:

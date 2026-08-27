@@ -15,12 +15,7 @@ public class OpenXmlServiceTests
 
     private OpenXmlService CreateService(Mock<IFileSystem> fileSystemMock)
     {
-        var mediaFileManager = new MediaFileManager(
-            fileSystemMock.Object,
-            Mock.Of<IMediaPathScheme>(),
-            Mock.Of<ILogger<MediaFileManager>>(),
-            Mock.Of<IShortStringHelper>(),
-            Mock.Of<IServiceProvider>());
+        var mediaFileManager = TestHelper.CreateMediaFileManager(fileSystemMock.Object);
         return new OpenXmlService(
             _factoryMock.Object,
             mediaFileManager,
@@ -203,12 +198,7 @@ public class OpenXmlServiceTests
         var fileSystemMock = new Mock<IFileSystem>();
         fileSystemMock.Setup(f => f.OpenFile(filePath)).Returns(stream);
 
-        var mediaFileManager = new MediaFileManager(
-            fileSystemMock.Object,
-            Mock.Of<IMediaPathScheme>(),
-            Mock.Of<ILogger<MediaFileManager>>(),
-            Mock.Of<IShortStringHelper>(),
-            Mock.Of<IServiceProvider>());
+        var mediaFileManager = TestHelper.CreateMediaFileManager(fileSystemMock.Object);
 
         var service = new OpenXmlService(factoryMock.Object, mediaFileManager, loggerMock.Object);
 

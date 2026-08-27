@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Runs the shared test suite against the Umbraco 13 variant of the package.
+    Owns no sources of its own - see ..\Umbraco.Community.Examine.OpenXml.Tests.
+  -->
+
+  <PropertyGroup>
+    <!-- Set before the import so it wins over the shared default. -->
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="..\Umbraco.Community.Examine.OpenXml.Tests\Examine.OpenXml.Tests.Shared.props" />
+
+  <PropertyGroup>
+    <AssemblyName>Umbraco.Community.Examine.OpenXml.Tests.v13</AssemblyName>
+    <RootNamespace>Umbraco.Community.Examine.OpenXml.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Umbraco.Community.Examine.OpenXml.v13\Umbraco.Community.Examine.OpenXml.v13.csproj" />
+  </ItemGroup>
+
+</Project>

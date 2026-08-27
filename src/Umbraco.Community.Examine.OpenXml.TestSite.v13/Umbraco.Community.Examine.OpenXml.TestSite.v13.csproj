@@ -6,17 +6,25 @@
     <CompressionEnabled>false</CompressionEnabled> <!-- Disable compression. E.g. for umbraco backoffice files. These files should be precompressed by node and not let dotnet handle it -->
   </PropertyGroup>
 
+  <!--
+    Umbraco 13 test site, on the latest 13.x release. References the .v13 wrapper package
+    project so the Umbraco 13 build of the package is exercised end to end.
+    See docs/BUILDING.md.
+  -->
   <ItemGroup>
     <PackageReference Include="Clean" Version="4.2.2" />
-    <PackageReference Include="Umbraco.Cms" Version="13.13.1" />
+    <PackageReference Include="Umbraco.Cms" Version="13.16.0" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Opt-in to app-local ICU to ensure consistent globalization APIs across different platforms -->
     <PackageReference Include="Microsoft.ICU.ICU4C.Runtime" Version="72.1.0.3" />
     <PackageReference Include="uSync" Version="13.3.2" />
-    <ProjectReference Include="..\Umbraco.Community.Examine.OpenXml\Umbraco.Community.Examine.OpenXml.csproj" />
     <RuntimeHostConfigurationOption Include="System.Globalization.AppLocalIcu" Value="72.1.0.3" Condition="$(RuntimeIdentifier.StartsWith('linux')) or $(RuntimeIdentifier.StartsWith('win')) or ('$(RuntimeIdentifier)' == '' and !$([MSBuild]::IsOSPlatform('osx')))" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Umbraco.Community.Examine.OpenXml.v13\Umbraco.Community.Examine.OpenXml.v13.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
