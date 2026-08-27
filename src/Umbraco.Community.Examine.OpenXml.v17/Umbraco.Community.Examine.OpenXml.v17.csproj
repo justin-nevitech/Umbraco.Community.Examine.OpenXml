@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    Umbraco 17 variant of the package.
+
+    This project owns NO sources of its own: it compiles the shared files in
+    ..\Umbraco.Community.Examine.OpenXml via Examine.OpenXml.Shared.props, and produces the
+    same assembly name and PackageId as the other variants. The only differences between the
+    variants are the target framework and the Umbraco.Cms.Web.Common range.
+
+    Add new source files to Umbraco.Community.Examine.OpenXml; all variants pick them up
+    automatically.
+
+    This produces the 17.x releases of the package. See docs/BUILDING.md.
+  -->
+
+  <PropertyGroup>
+    <!-- Set before the import so it wins over the shared default. -->
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="..\Umbraco.Community.Examine.OpenXml\Examine.OpenXml.Shared.props" />
+
+  <!--
+    The floor is the lowest release of the major, so every 17.x patch is a valid host.
+    This range flows into the packed nuspec.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="[17.0.0, 18.0.0)" />
+  </ItemGroup>
+
+</Project>

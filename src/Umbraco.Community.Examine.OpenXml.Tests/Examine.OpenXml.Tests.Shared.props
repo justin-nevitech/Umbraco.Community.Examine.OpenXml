@@ -1,0 +1,58 @@
+<Project>
+
+  <!--
+    Shared definition for the three test projects that run this suite:
+
+      Umbraco.Community.Examine.OpenXml.Tests.v13\...v13.csproj  -> against the Umbraco 13 package
+      Umbraco.Community.Examine.OpenXml.Tests.v17\...v17.csproj  -> against the Umbraco 17 package
+      Umbraco.Community.Examine.OpenXml.Tests.v18\...v18.csproj  -> against the Umbraco 18 package
+
+    This directory (Umbraco.Community.Examine.OpenXml.Tests) is NOT a project. It is the single
+    home for the test sources, mirroring how Umbraco.Community.Examine.OpenXml holds the shared
+    product sources. All three wrappers compile these same files, so every test runs against
+    every supported Umbraco major.
+
+    Add new test files here; all three wrappers pick them up automatically.
+  -->
+
+  <PropertyGroup>
+    <!-- Each wrapper sets its own TargetFramework before importing this file. -->
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+
+    <!-- Only the COMPILE globs are replaced: the sources are shared from this directory and the
+         default glob is relative to each wrapper's own folder. -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="xunit" Version="2.*" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Moq" Version="4.*" />
+  </ItemGroup>
+
+  <!-- Shared test sources. Each wrapper's own bin/obj are excluded. -->
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)**\*.cs"
+             Exclude="$(MSBuildThisFileDirectory)bin\**\*.cs;$(MSBuildThisFileDirectory)obj\**\*.cs" />
+  </ItemGroup>
+
+  <!--
+    The real .docx/.pptx/.xlsx documents the extractor tests parse. Linked from the shared
+    directory (the default Content glob would only look inside each wrapper's own folder) and
+    copied next to the test assembly, where TestHelper resolves them from AppContext.BaseDirectory.
+  -->
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)TestFiles\**\*"
+             Link="TestFiles\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

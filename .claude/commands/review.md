@@ -25,9 +25,10 @@ Review ALL source files in `src/Umbraco.Community.Examine.OpenXml/` for:
 - Spreadsheet: all cells across all worksheets, shared strings resolved correctly
 - No split-run issues (Word runs within same paragraph must concatenate without spaces)
 
-## Multi-targeting
-- Conditional package references correct for net8.0/net9.0/net10.0
-- No `#if` directives needed — code should be identical across TFMs
-- Build all TFMs: `dotnet build src/Umbraco.Community.Examine.OpenXml/Umbraco.Community.Examine.OpenXml.csproj`
+## Multi-major support
+- New sources live in the shared folder `src/Umbraco.Community.Examine.OpenXml/`, not in a `.vNN` wrapper project
+- Each wrapper project's Umbraco range floor is the lowest release of its major (13.0.0, 17.0.0, 18.0.0)
+- No `#if` directives needed — code should be identical across every Umbraco major
+- Build every variant: `dotnet build src/Umbraco.Community.Examine.OpenXml.slnx`
 
 Report ALL findings with file paths and line numbers. Flag severity as Critical, High, Medium, or Low.

@@ -1,10 +1,56 @@
-# Umbraco.Community.Examine.OpenXml
+# Examine OpenXml
 
 [![Downloads](https://img.shields.io/nuget/dt/Umbraco.Community.Examine.OpenXml?color=cc9900)](https://www.nuget.org/packages/Umbraco.Community.Examine.OpenXml/)
 [![NuGet](https://img.shields.io/nuget/vpre/Umbraco.Community.Examine.OpenXml?color=0273B3)](https://www.nuget.org/packages/Umbraco.Community.Examine.OpenXml)
 [![GitHub license](https://img.shields.io/github/license/justin-nevitech/Umbraco.Community.Examine.OpenXml?color=8AB803)](https://github.com/justin-nevitech/Umbraco.Community.Examine.OpenXml/blob/main/LICENSE)
 
 An Umbraco package that extracts text content from OpenXml documents (`.docx`, `.pptx`, `.xlsx`) uploaded to the media library and indexes it using [Examine](https://github.com/Shazwazza/Examine), making the content of your Office documents fully searchable.
+
+## Compatibility
+
+The package major tracks the Umbraco major, so you install the release line that matches your site:
+
+| Umbraco | .NET | Package version | Status |
+|---|---|---|---|
+| 13.x | .NET 8 | `13.x` | Supported |
+| 14.x | .NET 8 | — | Not supported (EOL) |
+| 15.x | .NET 9 | — | Not supported (EOL) |
+| 16.x | .NET 9 | — | Not supported (EOL) |
+| 17.x | .NET 10 | `17.x` | Supported |
+| 18.x | .NET 10 | `18.x` | Supported |
+
+**Versioning.** This package deliberately does not follow semantic versioning at the major
+level. The major number tracks the **Umbraco major** the release targets, not breaking changes in
+the package itself — so `13.x`, `17.x` and `18.x` are parallel release lines of the same code
+rather than successive rewrites. Within a line, minor and patch keep their usual meaning: minor
+for new functionality, patch for fixes.
+
+> **Pin the major when installing.** All three lines publish under the same package ID, and NuGet
+> resolves the *latest* version rather than the one matching your Umbraco major — so a bare
+> `dotnet add package` on an Umbraco 13 or 17 site pulls the `18.x` package and fails with an
+> `NU1107` version conflict. Specify the major you need (see [Quick Start](#quick-start)).
+
+Every release line is built from the same sources — see [BUILDING.md](https://github.com/justin-nevitech/Umbraco.Community.Examine.OpenXml/blob/main/docs/BUILDING.md) for how
+the three variants are produced. The older `1.x` releases remain on NuGet but are superseded by
+the version-aligned lines above.
+
+## Quick Start
+
+Add the package to an existing Umbraco website from NuGet, choosing the version that matches your
+Umbraco major:
+
+```bash
+# Umbraco 13
+dotnet add package Umbraco.Community.Examine.OpenXml --version 13.*
+
+# Umbraco 17
+dotnet add package Umbraco.Community.Examine.OpenXml --version 17.*
+
+# Umbraco 18
+dotnet add package Umbraco.Community.Examine.OpenXml --version 18.*
+```
+
+No additional startup configuration is needed. The package auto-registers via an Umbraco composer and the `OpenXmlIndex` will be available immediately after restarting the site.
 
 ## How It Works
 
@@ -23,26 +69,6 @@ The index is automatically kept in sync when media items are created, updated, o
 | `.docx` | Word documents |
 | `.pptx` | PowerPoint presentations |
 | `.xlsx` | Excel spreadsheets |
-
-## Supported Umbraco Versions
-
-| Umbraco | .NET | Status |
-|---|---|---|
-| 13.x | .NET 8 | Supported |
-| 14.x | .NET 8 | Not supported (EOL) |
-| 15.x | .NET 9 | Not supported (EOL) |
-| 16.x | .NET 9 | Supported |
-| 17.x | .NET 10 | Supported |
-
-## Installation
-
-Add the package to an existing Umbraco website from NuGet:
-
-```bash
-dotnet add package Umbraco.Community.Examine.OpenXml
-```
-
-No additional startup configuration is needed. The package auto-registers via an Umbraco composer and the `OpenXmlIndex` will be available immediately after restarting the site.
 
 ## Searching the Index
 
@@ -109,10 +135,17 @@ To protect against malicious or oversized documents, the following limits are ap
 
 Documents that exceed these limits are logged as warnings and excluded from the index. These values are defined in the `OpenXmlIndexConstants` class.
 
+## Author
+
+Created and maintained by [Justin Neville](https://www.nevitech.co.uk) at
+[Nevitech IT Solutions Ltd](https://www.nevitech.co.uk).
+
+## Documentation
+
+For full documentation and source code, visit the [GitHub repository](https://github.com/justin-nevitech/Umbraco.Community.Examine.OpenXml).
+
 ## Acknowledgments
 
 This package is based on [UmbracoExamine.PDF](https://github.com/umbraco/UmbracoExamine.PDF) by the Umbraco team. Thank you to the Umbraco HQ developers and contributors for providing the foundation and patterns that made this package possible.
 
 [Files and folders icons created by kawalanicon - Flaticon](https://www.flaticon.com/free-icons/files-and-folders)
-
-For full documentation and source code, visit the [GitHub repository](https://github.com/justin-nevitech/Umbraco.Community.Examine.OpenXml).

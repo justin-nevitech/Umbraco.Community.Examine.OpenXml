@@ -1,7 +1,11 @@
 Perform a security review of ALL source files in `src/Umbraco.Community.Examine.OpenXml/`.
 
 ## Dependency Review
-Run `dotnet list src/Umbraco.Community.Examine.OpenXml/Umbraco.Community.Examine.OpenXml.csproj package --vulnerable` for each TFM and report any known CVEs.
+Run `dotnet list <project> package --vulnerable --include-transitive` for each package variant and
+report any known CVEs:
+- `src/Umbraco.Community.Examine.OpenXml.v13/Umbraco.Community.Examine.OpenXml.v13.csproj`
+- `src/Umbraco.Community.Examine.OpenXml.v17/Umbraco.Community.Examine.OpenXml.v17.csproj`
+- `src/Umbraco.Community.Examine.OpenXml.v18/Umbraco.Community.Examine.OpenXml.v18.csproj`
 
 ## Code Review
 

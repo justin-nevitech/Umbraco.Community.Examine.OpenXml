@@ -1,0 +1,84 @@
+<Project>
+
+  <!--
+    Shared definition for the three package projects that build this component:
+
+      Umbraco.Community.Examine.OpenXml.v13\...v13.csproj  -> Umbraco 13 (net8.0)
+      Umbraco.Community.Examine.OpenXml.v17\...v17.csproj  -> Umbraco 17 (net10.0)
+      Umbraco.Community.Examine.OpenXml.v18\...v18.csproj  -> Umbraco 18 (net10.0)
+
+    This directory (Umbraco.Community.Examine.OpenXml) is NOT a project. It is the single
+    home for the shared C# sources. The three wrapper projects above compile these files and
+    produce the same assembly name and PackageId; only the target framework and the
+    Umbraco.Cms.Web.Common range differ. The sources are identical across all majors - there
+    are no #if preprocessor directives.
+
+    Why three project files rather than one multi-targeted project: Umbraco 17 and Umbraco 18
+    both run on net10.0, so a single TargetFrameworks list cannot express "net10.0 against
+    Umbraco 17" and "net10.0 against Umbraco 18" at the same time. Each major therefore gets
+    its own project, its own restore and its own release line - see docs/BUILDING.md.
+
+    Add new source files to this directory; all three variants pick them up automatically.
+  -->
+
+  <PropertyGroup>
+    <!-- Each wrapper sets its own TargetFramework before importing this file. -->
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
+    <RootNamespace>Umbraco.Community.Examine.OpenXml</RootNamespace>
+    <AssemblyName>Umbraco.Community.Examine.OpenXml</AssemblyName>
+
+    <!--
+      Only the COMPILE globs are replaced (the sources are shared from this directory and the
+      default glob is relative to each project's own folder). Default Content/None items stay
+      enabled so the Razor SDK's static web asset discovery keeps working.
+    -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+
+    <!-- Directory holding the shared sources. -->
+    <ExamineOpenXmlSharedDir>$(MSBuildThisFileDirectory)</ExamineOpenXmlSharedDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>Umbraco.Community.Examine.OpenXml</Product>
+    <PackageId>Umbraco.Community.Examine.OpenXml</PackageId>
+    <Title>Examine OpenXml</Title>
+    <Description>Extracts text content from OpenXml documents (.docx, .pptx, .xlsx) uploaded to the Umbraco media library and indexes it using Examine, making Office document content fully searchable.</Description>
+    <PackageTags>umbraco;umbraco-marketplace;examine;search;openxml</PackageTags>
+    <Authors>Justin Neville</Authors>
+    <Company>Nevitech IT Solutions Ltd</Company>
+    <Copyright>$([System.DateTime]::UtcNow.ToString(`yyyy`)) © Justin Neville</Copyright>
+    <PackageProjectUrl>https://github.com/justin-nevitech/Umbraco.Community.Examine.OpenXml</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/justin-nevitech/Umbraco.Community.Examine.OpenXml</RepositoryUrl>
+    <PackageReadmeFile>README_nuget.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <!-- Shared C# sources. Build output is excluded. -->
+  <ItemGroup>
+    <Compile Include="$(ExamineOpenXmlSharedDir)**\*.cs"
+             Exclude="$(ExamineOpenXmlSharedDir)bin\**\*.cs;$(ExamineOpenXmlSharedDir)obj\**\*.cs" />
+  </ItemGroup>
+
+  <!-- Common to every major - the OpenXml SDK does the text extraction. -->
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+  </ItemGroup>
+
+  <!-- Keep the scaffolding notes visible in the IDE without packing them. -->
+  <ItemGroup>
+    <None Include="$(ExamineOpenXmlSharedDir)README.txt" Link="README.txt" Pack="false" />
+  </ItemGroup>
+
+  <!-- Packaged docs. -->
+  <ItemGroup>
+    <None Include="$(ExamineOpenXmlSharedDir)..\..\docs\README_nuget.md" Pack="true" PackagePath="\" />
+    <None Include="$(ExamineOpenXmlSharedDir)..\..\docs\icon.png" Pack="true" PackagePath="\" />
+    <None Include="$(ExamineOpenXmlSharedDir)..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

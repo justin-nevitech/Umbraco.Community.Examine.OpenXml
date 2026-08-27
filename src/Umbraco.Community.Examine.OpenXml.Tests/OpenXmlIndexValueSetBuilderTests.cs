@@ -17,12 +17,7 @@ public class OpenXmlIndexValueSetBuilderTests
         var factoryMock = new Mock<IOpenXmlTextExtractorFactory>();
         var fileSystemMock = new Mock<IFileSystem>();
 
-        var mediaFileManager = new MediaFileManager(
-            fileSystemMock.Object,
-            Mock.Of<IMediaPathScheme>(),
-            Mock.Of<ILogger<MediaFileManager>>(),
-            Mock.Of<IShortStringHelper>(),
-            Mock.Of<IServiceProvider>());
+        var mediaFileManager = TestHelper.CreateMediaFileManager(fileSystemMock.Object);
 
         var serviceLoggerMock = new Mock<ILogger<OpenXmlService>>();
 
